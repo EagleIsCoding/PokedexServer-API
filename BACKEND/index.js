@@ -103,5 +103,28 @@ app.get('/pokemon/:data', (req, res) => { // route pour un pokémon par son id o
     }
 });
 
+app.get('/type/:type', (req, res) => { // route pour les pokémons par type 
+    const typeParam = req.params.type.toLowerCase();
+    fs.readFile(POKEDEX_SRC, 'utf8', (err, data) => {
+        if (err) {
+            console.error('Error during file read:', err);
+            res.status(500).send('Server error');
+            return;
+        }
+        const pokedex = JSON.parse(data);
+        const filteredPokemons = pokedex.filter(p =>
+            Array.isArray(p.type) && // vérifier que p.type est un tableau
+            p.type.length > 0 && // vérifier que le tableau n'est pas vide
+            p.type.some(t => t.toLowerCase() === typeParam) // utiliser some() pour vérifier si au moins un type correspond
+        );
+        if (filteredPokemons.length === 0) {
+            res.status(404).send('No pokemon found for the specified type');
+            return;
+        }
+        res.json(filteredPokemons);
+    });
+});
+
+
 // Servir tout le dossier frontend (HTML, JS, CSS)
 app.use(express.static(path.join(__dirname, '../FRONTEND')));
